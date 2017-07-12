@@ -1,3 +1,4 @@
+# python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
 # python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50
 #
 # https://trac.ffmpeg.org/wiki/Slideshow
