@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+#
+# This script creates ...
+#
+# Requires a Python interpreter with numpy and matplotlib
+#
+# Requires imagemagick to access convert when creating gif
+# Requires ffmpeg to create mp4 video
+#
+# Examples
+# python JuliaSet.py --help
 # python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
 # python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50
 #
@@ -29,8 +40,8 @@ def julia_set(**kwargs):
         norm = np.abs(Z)
         bb = norm < max_abs
         Z[bb] = Z[bb] * Z[bb] + c
-        Z_level[bb] -= 3
-        Z_level[Z_level<0] = 0
+        Z_level[bb] -= 4
+        Z_level[Z_level < 0] = 0
     return Z, Z_level
 
 
@@ -113,12 +124,22 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
 
 
 def create_several_julias_set(n, cn, **kwargs):
+    parallel = kwargs.get('parallel', False)
     cn = np.linspace(cn[0], cn[1], n)
-    for c in cn:
-        create_one_julias_set(c, **kwargs)
+    if parallel:
+        from multiprocessing import cpu_count
+        from multiprocessing import Pool
+        ncores = max(1, cpu_count()-1)
+        raise NotImplementedError
+        listOfInputs = [{'base':b, 'factor':f, 'text':args.text, 'filename':k, 'dpi':args.dpi} for f, b, k in zip(factors, bases, filenames)]
+        p = Pool(ncores)
+        p.map(create_one_julias_set, listOfInputs)
+    else:
+        for c in cn:
+            create_one_julias_set(c, **kwargs)
 
 
-def create_animated_gif(maxRecursionLevel=6, filename='gosper_curve.gif', **kwargs):
+def create_animated_gif(maxRecursionLevel=6, filename='juliaset.gif', **kwargs):
     grid = kwargs.get('grid', False)
     import subprocess
     generateLevel = lambda x: list(range(x)) + [x - i - 2 for i in range(x - 1)]
@@ -131,32 +152,102 @@ def create_animated_gif(maxRecursionLevel=6, filename='gosper_curve.gif', **kwar
     subprocess.check_output(cmd.split(' '))
 
 
+def create_animated_gif2(filename='juliaset.gif', **kwargs):
+    import subprocess
+    pngs = kwargs.get('pngs', None)
+    continuous = kwargs.get('continuous', False)
+    if pngs is None:
+        from glob import glob
+        pngs = glob('*.png')
+    if continuous:
+        pngs += pngs[-2:0:-1]
+    cmd = 'convert -antialias -density 100 -delay 120 '
+    cmd += ' '.join(pngs)
+    cmd += ' ' + filename
+    subprocess.check_output(cmd.split(' '))
+
+
+def create_animated_mp4(filename='juliaset.mp4', **kwargs):
+    import subprocess
+    import os
+    pngs = kwargs.get('pngs', None)
+    framerate = kwargs.get('framerate', 12)
+    continuous = kwargs.get('continuous', False)
+    if pngs is None:
+        from glob import glob
+        pngs = glob('*.png')
+    if continuous:
+        pngs += pngs[-2:0:-1]
+    infile = open('tmp.txt', 'w')
+    for png in pngs:
+        infile.write('file ' + png + '\n')
+        infile.write('duration ' + str(1.0 / framerate) + '\n')
+    infile.write('file ' + pngs[-1] + '\n')
+    infile.close()
+    cmd = 'ffmpeg -f concat -i tmp.txt ' + filename
+    subprocess.check_output(cmd.split(' '))
+    os.remove('tmp.txt')
+
+
+def get_description():
+    from textwrap import dedent
+    description = """
+        Generate a julias set fractal curve
+        """
+    return dedent(description)
+
+
+def get_epilog():
+    from textwrap import dedent
+    epilog = """
+        # Display help
+        python JuliaSet.py --help
+
+        #
+        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
+
+        #
+        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50
+
+        # Same as previous but with fully developped argument
+        python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50
+        """
+    return dedent(epilog)
+
+
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description='Generate a julias set fractal curve')
+    import os
+    class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+        pass
+    parser = argparse.ArgumentParser(description=get_description(),
+                                     epilog=get_epilog(),
+                                     formatter_class=CustomFormatter)
     pa = parser.add_argument
     pa('-s', '--size', type=int, help='number of recursion level. Reasonnable value is 6', default=401)
     pa('-c', '--colormap', type=str, help='number of recursion level. Reasonnable value is 6', default='viridis')
     pa('-i', '--invert', action='store_true', help='boolean used to display all levels')
     pa('-o', '--output', default=None, help='name of the generated file. If not provided, result will display on screen')
-    pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2x+2, -2x+2 square will be created')
+    pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2 x +2, -2 x +2 square will be created')
     pa('-k', type=complex, default=[complex(0.285, 0.01)], nargs='*', help='name of the generated file. If not provided, result will display on screen')
     pa('-n', '--number', type=int, help='number of pictures to generate between two complex numbers. Default is 2', default=2)
+    pa('-p', '--parallel', action='store_true', help='boolean used to create images in a parallel way. It used the (n-1) cores. Default is False')
     args = parser.parse_args()
-    if args.output is None:
-        output = None
-    else:
-        output = args.output
-    if len(args.k)==1:
+    output = args.output
+    if len(args.k) == 1:
         create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
     else:
         create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
-
-    #if args.output and args.output.lower().endswith('gif'):
-    #    create_animated_gif(maxRecursionLevel=args.level, filename=args.output, grid=args.grid, tile=args.tile)
-    #else:
-    #    plot_level(args.level, showAllLevel=args.all, filename=args.output, grid=args.grid, tile=args.tile)
-
+        if args.output is None:
+            args.output = 'juliaset.mp4'
+        if args.output and args.output.lower().endswith('gif'):
+            raise NotImplementedError
+            # create_animated_gif
+        elif args.output and args.output.lower().endswith('mp4'):
+            raise NotImplementedError
+            # create_animated_mp4
+        else:
+            raise Exception('Invalid extension, one expects gif or mp4')
 
 if __name__ == '__main__':
     main()
