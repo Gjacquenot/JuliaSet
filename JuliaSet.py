@@ -102,6 +102,10 @@ def getFilename(colormap, c, suffix=''):
     return colormap + '/res_{0:06d}_{1:06d}{2}.png'.format(int(100000 * c.real), int(100000 * c.imag), suffix)
 
 
+def getFilenames(colormap, cn, suffix=''):
+    return [getFilename(colormap, c, suffix) for c in cn]
+
+
 def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=None, **kwargs):
     s = kwargs.get('s', 401)
     x = kwargs.get('x', 2.0)
@@ -123,36 +127,31 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
         make_image(Z_level+np.abs(Z), outputname=outputname, colormap=colormap, dpi=s)
 
 
+def create_one_julias_set_to_expand(kwargs):
+    create_one_julias_set(**kwargs)
+
+
 def create_several_julias_set(n, cn, **kwargs):
     parallel = kwargs.get('parallel', False)
+    colormap = kwargs.get('colormap', 'magma')
+    s = kwargs.get('s', 401)
+    x = kwargs.get('x', 2.0)
+    invert = kwargs.get('invert', False)
     cn = np.linspace(cn[0], cn[1], n)
+    outputnames = getFilenames(colormap, cn)
     if parallel:
         from multiprocessing import cpu_count
         from multiprocessing import Pool
-        ncores = max(1, cpu_count()-1)
-        raise NotImplementedError
-        listOfInputs = [{'base':b, 'factor':f, 'text':args.text, 'filename':k, 'dpi':args.dpi} for f, b, k in zip(factors, bases, filenames)]
+        ncores = max(1, cpu_count() - 1)
+        listOfInputs = [{'c':complex(c), 's':s, 'x':x, 'invert':invert, 'colormap':colormap, 'outputname':outputname} for c, outputname in zip(cn, outputnames)]
         p = Pool(ncores)
-        p.map(create_one_julias_set, listOfInputs)
+        p.map(create_one_julias_set_to_expand, listOfInputs)
     else:
-        for c in cn:
-            create_one_julias_set(c, **kwargs)
+        for c, outputname in zip(cn, outputnames):
+            create_one_julias_set(c, outputname=outputname, **kwargs)
 
 
-def create_animated_gif(maxRecursionLevel=6, filename='juliaset.gif', **kwargs):
-    grid = kwargs.get('grid', False)
-    import subprocess
-    generateLevel = lambda x: list(range(x)) + [x - i - 2 for i in range(x - 1)]
-    cmd = 'convert -antialias -density 100 -delay 120 '
-    for level in generateLevel(maxRecursionLevel + 1):
-        cfilename = filename + '_' + '{0:03d}'.format(level) + '.png'
-        cmd += cfilename + ' '
-        plot_level(max_level=level, showAllLevel=False, filename=cfilename)
-    cmd += filename
-    subprocess.check_output(cmd.split(' '))
-
-
-def create_animated_gif2(filename='juliaset.gif', **kwargs):
+def create_animated_gif(filename='juliaset.gif', **kwargs):
     import subprocess
     pngs = kwargs.get('pngs', None)
     continuous = kwargs.get('continuous', False)
@@ -237,15 +236,15 @@ def main():
     if len(args.k) == 1:
         create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
     else:
-        create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
+        outputnames = getFilenames(cn=args.k, colormap=args.colormap)
+        create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap,
+                s=args.size, x=args.x, invert=args.invert, parallel=args.parallel)
         if args.output is None:
             args.output = 'juliaset.mp4'
-        if args.output and args.output.lower().endswith('gif'):
-            raise NotImplementedError
-            # create_animated_gif
-        elif args.output and args.output.lower().endswith('mp4'):
-            raise NotImplementedError
-            # create_animated_mp4
+        if args.output.lower().endswith('gif'):
+            create_animated_gif(filename=args.output, pngs=outputnames, continuous=False)
+        elif args.output.lower().endswith('mp4'):
+            create_animated_mp4(filename=args.output, pngs=outputnames, continuous=False)
         else:
             raise Exception('Invalid extension, one expects gif or mp4')
 
