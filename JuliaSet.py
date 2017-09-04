@@ -47,31 +47,11 @@ def julia_set(**kwargs):
 
 def list_of_colormaps():
     # http://matplotlib.org/examples/color/colormaps_reference.html
-    cmaps = [('Perceptually Uniform Sequential', [
-                'viridis', 'plasma', 'inferno', 'magma']),
-            ('Sequential', [
-                'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
-                'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
-                'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']),
-            ('Sequential (2)', [
-                'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
-                'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
-                'hot', 'afmhot', 'gist_heat', 'copper']),
-            ('Diverging', [
-                'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
-                'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
-            ('Qualitative', [
-                'Pastel1', 'Pastel2', 'Paired', 'Accent',
-                'Dark2', 'Set1', 'Set2', 'Set3',
-                'tab10', 'tab20', 'tab20b', 'tab20c']),
-            ('Miscellaneous', [
-                'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
-                'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
-                'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar'])]
-    all_cmaps = [cmap_list for _, cmap_list in cmaps]
-    flatten = lambda l: [item for sublist in l for item in sublist]
-    all_cmaps = flatten(all_cmaps)
-    return all_cmaps
+    import matplotlib.pyplot as plt
+    # Get a list of the colormaps in matplotlib.  Ignore the ones that end with
+    # '_r' because these are simply reversed versions of ones that don't end
+    # with '_r'
+    return sorted(m for m in plt.cm.datad if not m.endswith("_r"))
 
 
 def make_image(data, outputname='res.png', **kwargs):
@@ -202,7 +182,7 @@ def get_epilog():
         # Display help
         python JuliaSet.py --help
 
-        #
+        # Create a Julia set fractal with k=0.285+0.01j with 501 points and a square with half-length of 1.25
         python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
 
         #
@@ -210,7 +190,10 @@ def get_epilog():
 
         # Same as previous but with fully developped argument
         python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50
-        """
+
+        # Available colormaps are
+        {0}
+        """.format(', '.join(list_of_colormaps()))
     return dedent(epilog)
 
 
