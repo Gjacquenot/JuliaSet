@@ -57,9 +57,10 @@ def list_of_colormaps():
 def make_image(data, outputname='res.png', **kwargs):
     import matplotlib.pyplot as plt
     import os
-    dOutputName = os.path.dirname(outputname)
-    if dOutputName and not os.path.exists(dOutputName):
-        os.makedirs(dOutputName)
+    if outputname:
+        dOutputName = os.path.dirname(outputname)
+        if dOutputName and not os.path.exists(dOutputName):
+            os.makedirs(dOutputName)
     xmin = kwargs.get('xmin', 0.0)
     ymin = kwargs.get('ymin', 0.0)
     xmax = kwargs.get('xmax', 1.0)
@@ -74,8 +75,12 @@ def make_image(data, outputname='res.png', **kwargs):
     plt.set_cmap(colormap)
     # ax.contourf(data, aspect='normal')
     ax.contourf(data)
-    plt.savefig(outputname, dpi=dpi)
-    plt.close()
+    print(outputname)
+    if outputname:
+        plt.savefig(outputname, dpi=dpi)
+        plt.close()
+    else:
+        plt.show()
 
 
 def getFilename(colormap, c, suffix=''):
@@ -91,8 +96,6 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
     x = kwargs.get('x', 2.0)
     invert = kwargs.get('invert', False)
     Z, Z_level = julia_set(w=s, h=s, c=c, re_min=-x, re_max=+x, im_min=-x, im_max=+x, **kwargs)
-    if outputname is None:
-        outputname = getFilename(colormap, c, suffix='')
     make_three_images = False
     if make_three_images:
         ZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z)), axis=1)
@@ -100,6 +103,8 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
     else:
         ZZ = np.abs(Z)
         make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
+    if outputname is None:
+        outputname = getFilename(colormap, c, suffix='')
     if invert:
         outputname = getFilename(colormap, c, '_level')
         make_image(Z_level, outputname=outputname, colormap=colormap, dpi=s)
