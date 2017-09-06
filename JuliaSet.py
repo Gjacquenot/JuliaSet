@@ -83,12 +83,12 @@ def make_image(data, outputname='res.png', **kwargs):
         plt.show()
 
 
-def getFilename(colormap, c, suffix=''):
+def get_filename(colormap, c, suffix=''):
     return colormap + '/res_{0:06d}_{1:06d}{2}.png'.format(int(100000 * c.real), int(100000 * c.imag), suffix)
 
 
-def getFilenames(colormap, cn, suffix=''):
-    return [getFilename(colormap, c, suffix) for c in cn]
+def get_filenames(colormap, cn, suffix=''):
+    return [get_filename(colormap, c, suffix) for c in cn]
 
 
 def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=None, **kwargs):
@@ -104,11 +104,11 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
         ZZ = np.abs(Z)
         make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
     if outputname is None:
-        outputname = getFilename(colormap, c, suffix='')
+        outputname = get_filename(colormap, c, suffix='')
     if invert:
-        outputname = getFilename(colormap, c, '_level')
+        outputname = get_filename(colormap, c, '_level')
         make_image(Z_level, outputname=outputname, colormap=colormap, dpi=s)
-        outputname = getFilename(colormap, c, '_level_mix')
+        outputname = get_filename(colormap, c, '_level_mix')
         make_image(Z_level+np.abs(Z), outputname=outputname, colormap=colormap, dpi=s)
 
 
@@ -123,7 +123,7 @@ def create_several_julias_set(n, cn, **kwargs):
     x = kwargs.get('x', 2.0)
     invert = kwargs.get('invert', False)
     cn = np.linspace(cn[0], cn[1], n)
-    outputnames = getFilenames(colormap, cn)
+    outputnames = get_filenames(colormap, cn)
     if parallel:
         from multiprocessing import cpu_count
         from multiprocessing import Pool
@@ -190,8 +190,8 @@ def get_epilog():
         # Create a Julia set fractal with k=0.285+0.01j with 501 points and a square with half-length of 1.25
         python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
 
-        #
-        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50
+        # Create an animation with 50 frames that covers 0.285+0.01j 0.285+0.02j
+        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50 -o animation.mp4
 
         # Same as previous but with fully developped argument
         python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50
@@ -224,15 +224,15 @@ def main():
     if len(args.k) == 1:
         create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
     else:
-        outputnames = getFilenames(cn=args.k, colormap=args.colormap)
         create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap,
                 s=args.size, x=args.x, invert=args.invert, parallel=args.parallel)
         if args.output is None:
             args.output = 'juliaset.mp4'
+        outputnames = get_filenames(cn=np.linspace(args.k[0], args.k[1], args.number), colormap=args.colormap)
         if args.output.lower().endswith('gif'):
-            create_animated_gif(filename=args.output, pngs=outputnames, continuous=False)
+            create_animated_gif(filename=args.output, pngs=outputnames, continuous=True)
         elif args.output.lower().endswith('mp4'):
-            create_animated_mp4(filename=args.output, pngs=outputnames, continuous=False)
+            create_animated_mp4(filename=args.output, pngs=outputnames, continuous=True)
         else:
             raise Exception('Invalid extension, one expects gif or mp4')
 
