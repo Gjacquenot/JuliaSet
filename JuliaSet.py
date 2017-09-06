@@ -190,11 +190,11 @@ def get_epilog():
         # Create a Julia set fractal with k=0.285+0.01j with 501 points and a square with half-length of 1.25
         python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
 
-        # Create an animation with 50 frames that covers 0.285+0.01j 0.285+0.02j
+        # Create an animation with 50 frames that covers from 0.285+0.01j to 0.285+0.02j
         python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50 -o animation.mp4
 
-        # Same as previous but with fully developped argument
-        python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50
+        # Same as previous but with fully developped argument and parallel execution
+        python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50 --parallel
 
         # Available colormaps are
         {0}
