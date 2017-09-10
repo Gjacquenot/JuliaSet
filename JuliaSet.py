@@ -35,12 +35,12 @@ def julia_set(**kwargs):
     Y, X = np.meshgrid(imag_range, real_range)
     Z = X + 1j * Y
     Z_level = level * np.ones(Z.shape, dtype=np.uint8)
-    max_abs = 4
+    max_abs = 5
     for _ in range(level):
         norm = np.abs(Z)
         bb = norm < max_abs
         Z[bb] = Z[bb] * Z[bb] + c
-        Z_level[bb] -= 4
+        Z_level[bb] -= 5
         Z_level[Z_level < 0] = 0
     return Z, Z_level
 
@@ -73,9 +73,8 @@ def make_image(data, outputname='res.png', **kwargs):
     ax.set_axis_off()
     fig.add_axes(ax)
     plt.set_cmap(colormap)
-    # ax.contourf(data, aspect='normal')
-    ax.contourf(data)
-    print(outputname)
+    ax.contourf(data, aspect='normal')
+    # ax.contourf(data)
     if outputname:
         plt.savefig(outputname, dpi=dpi)
         plt.close()
@@ -169,7 +168,7 @@ def create_animated_mp4(filename='juliaset.mp4', **kwargs):
     infile.write('file ' + pngs[-1] + '\n')
     infile.close()
     cmd = 'ffmpeg -f concat -i tmp.txt ' + filename
-    subprocess.check_output(cmd.split(' '))
+    subprocess.check_output(cmd.split(' '), cwd=os.getcwd())
     os.remove('tmp.txt')
 
 
@@ -214,7 +213,7 @@ def main():
     pa('-k', type=complex, default=[complex(0.285, 0.01)], nargs='*', help='complex number used to create Julia set.  Two numbers have to be given for animation.')
     pa('-s', '--size', type=int, help='size of the generated image.', default=401)
     pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2 x +2, -2 x +2 square will be created.')
-    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use', default='viridis')
+    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use', default='autumn')
     pa('-i', '--invert', action='store_true', help='boolean used to invert colormap display.')
     pa('-o', '--output', default=None, help='name of the generated file. If not provided, result will display on screen.')
     pa('-n', '--number', type=int, help='number of pictures to generate between two complex numbers. Default is 2.', default=2)
@@ -225,10 +224,12 @@ def main():
         create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
     else:
         create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap,
-                s=args.size, x=args.x, invert=args.invert, parallel=args.parallel)
+              s=args.size, x=args.x, invert=args.invert, parallel=args.parallel)
         if args.output is None:
             args.output = 'juliaset.mp4'
-        outputnames = get_filenames(cn=np.linspace(args.k[0], args.k[1], args.number), colormap=args.colormap)
+        outputnames = get_filenames(cn=np.linspace(args.k[0], args.k[1], args.number),
+                                    colormap=args.colormap,
+                                    suffix='_level_mix' if args.invert else '')
         if args.output.lower().endswith('gif'):
             create_animated_gif(filename=args.output, pngs=outputnames, continuous=True)
         elif args.output.lower().endswith('mp4'):
