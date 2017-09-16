@@ -96,19 +96,18 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
     invert = kwargs.get('invert', False)
     make_four_images = kwargs.get('make_four_images', False)
     Z, Z_level = julia_set(w=s, h=s, c=c, re_min=-x, re_max=+x, im_min=-x, im_max=+x, **kwargs)
+    ZZ = np.abs(Z)
     if make_four_images:
-        ZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z), Z_level), axis=1)
-        make_image(ZZ, outputname=outputname, xmax=4, colormap=colormap)
+        ZZZ = np.concatenate((np.real(Z), ZZ, np.imag(Z), Z_level/np.max(ZZ)), axis=1)
+        make_image(ZZZ, outputname=outputname, xmax=4, colormap=colormap, dpi=s)
     else:
         ZZ = np.abs(Z)
         make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
-    if outputname is None:
-        outputname = get_filename(colormap, c, suffix='')
     if invert:
-        outputname = get_filename(colormap, c, '_level')
+        outputname = get_filename(colormap, c, suffix='_level')
         make_image(Z_level, outputname=outputname, colormap=colormap, dpi=s)
-        outputname = get_filename(colormap, c, '_level_mix')
-        make_image(Z_level+np.abs(Z), outputname=outputname, colormap=colormap, dpi=s)
+        outputname = get_filename(colormap, c, suffix='_level_mix')
+        make_image(Z_level + ZZ, outputname=outputname, colormap=colormap, dpi=s)
 
 
 def create_one_julias_set_to_expand(kwargs):
