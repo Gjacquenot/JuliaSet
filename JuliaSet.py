@@ -94,11 +94,11 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
     s = kwargs.get('s', 401)
     x = kwargs.get('x', 2.0)
     invert = kwargs.get('invert', False)
+    make_four_images = kwargs.get('make_four_images', False)
     Z, Z_level = julia_set(w=s, h=s, c=c, re_min=-x, re_max=+x, im_min=-x, im_max=+x, **kwargs)
-    make_three_images = False
-    if make_three_images:
-        ZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z)), axis=1)
-        make_image(ZZ, outputname=outputname, xmax=3, colormap=colormap)
+    if make_four_images:
+        ZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z), Z_level), axis=1)
+        make_image(ZZ, outputname=outputname, xmax=4, colormap=colormap)
     else:
         ZZ = np.abs(Z)
         make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
