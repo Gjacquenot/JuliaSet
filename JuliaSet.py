@@ -35,7 +35,7 @@ def julia_set(**kwargs):
     Y, X = np.meshgrid(imag_range, real_range)
     Z = X + 1j * Y
     Z_level = level * np.ones(Z.shape, dtype=np.uint8)
-    max_abs = 5
+    max_abs = 6
     for _ in range(level):
         norm = np.abs(Z)
         bb = norm < max_abs
@@ -68,7 +68,7 @@ def make_image(data, outputname='res.png', **kwargs):
     dpi = kwargs.get('dpi', 40)
     colormap = kwargs.get('colormap', 'hot')
     fig = plt.figure()
-    fig.set_size_inches(1*(xmax-xmin), 1*(ymax-ymin))
+    fig.set_size_inches(1 * (xmax - xmin), 1 * (ymax - ymin))
     ax = plt.Axes(fig, [0, 0, 1, 1])
     ax.set_axis_off()
     fig.add_axes(ax)
@@ -94,12 +94,14 @@ def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=Non
     s = kwargs.get('s', 401)
     x = kwargs.get('x', 2.0)
     invert = kwargs.get('invert', False)
-    make_four_images = kwargs.get('make_four_images', False)
+    make_five_images = kwargs.get('make_five_images', True)
     Z, Z_level = julia_set(w=s, h=s, c=c, re_min=-x, re_max=+x, im_min=-x, im_max=+x, **kwargs)
-    ZZ = np.abs(Z)
-    if make_four_images:
-        ZZZ = np.concatenate((np.real(Z), ZZ, np.imag(Z), Z_level/np.max(ZZ)), axis=1)
-        make_image(ZZZ, outputname=outputname, xmax=4, colormap=colormap, dpi=s)
+    Z /= np.max(np.abs(Z))
+    Z_level = Z_level.astype(float)
+    Z_level = (Z_level - np.min(Z_level)) / (np.max(Z_level) - np.min(Z_level))
+    if make_five_images:
+        ZZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z), Z_level, 0.5 * (Z_level + np.abs(Z))), axis=1)
+        make_image(ZZZ, outputname=outputname, xmax=5, colormap=colormap, dpi=s)
     else:
         ZZ = np.abs(Z)
         make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
