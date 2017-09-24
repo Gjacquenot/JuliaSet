@@ -93,23 +93,18 @@ def get_filenames(colormap, cn, suffix=''):
 def create_one_julias_set(c=complex(0.0, 0.65), colormap='magma', outputname=None, **kwargs):
     s = kwargs.get('s', 401)
     x = kwargs.get('x', 2.0)
-    invert = kwargs.get('invert', False)
-    make_five_images = kwargs.get('make_five_images', True)
+    w = kwargs.get('w', 0.75)  # define ponderation between level and norm
+    pattern = kwargs.get('pattern', 'abcde')  #
     Z, Z_level = julia_set(w=s, h=s, c=c, re_min=-x, re_max=+x, im_min=-x, im_max=+x, **kwargs)
     Z /= np.max(np.abs(Z))
+    Z_abs = np.abs(Z)
     Z_level = Z_level.astype(float)
     Z_level = (Z_level - np.min(Z_level)) / (np.max(Z_level) - np.min(Z_level))
-    if make_five_images:
-        ZZZ = np.concatenate((np.real(Z), np.abs(Z), np.imag(Z), Z_level, 0.5 * (Z_level + np.abs(Z))), axis=1)
-        make_image(ZZZ, outputname=outputname, xmax=5, colormap=colormap, dpi=s)
-    else:
-        ZZ = np.abs(Z)
-        make_image(ZZ, outputname=outputname, colormap=colormap, dpi=s)
-    if invert:
-        outputname = get_filename(colormap, c, suffix='_level')
-        make_image(Z_level, outputname=outputname, colormap=colormap, dpi=s)
-        outputname = get_filename(colormap, c, suffix='_level_mix')
-        make_image(Z_level + ZZ, outputname=outputname, colormap=colormap, dpi=s)
+    Z_weighted = 0.5 / (w + 1.0) * (Z_level + w * Z_abs)
+    Z_weighted = (Z_weighted - np.min(Z_weighted)) / (np.max(Z_weighted) - np.min(Z_weighted))
+    dictPattern = {'a': np.real(Z), 'b': Z_abs, 'c': np.imag(Z), 'd': Z_level, 'e': Z_weighted}
+    ZZZ = np.concatenate([dictPattern[p] for p in pattern], axis=1)
+    make_image(ZZZ, outputname=outputname, xmax=len(pattern), colormap=colormap, dpi=s)
 
 
 def create_one_julias_set_to_expand(kwargs):
@@ -121,14 +116,14 @@ def create_several_julias_set(n, cn, **kwargs):
     colormap = kwargs.get('colormap', 'magma')
     s = kwargs.get('s', 401)
     x = kwargs.get('x', 2.0)
-    invert = kwargs.get('invert', False)
+    pattern = kwargs.get('pattern', 'abcde')
     cn = np.linspace(cn[0], cn[1], n)
     outputnames = get_filenames(colormap, cn)
     if parallel:
         from multiprocessing import cpu_count
         from multiprocessing import Pool
         ncores = max(1, cpu_count() - 1)
-        listOfInputs = [{'c':complex(c), 's':s, 'x':x, 'invert':invert, 'colormap':colormap, 'outputname':outputname} for c, outputname in zip(cn, outputnames)]
+        listOfInputs = [{'c':complex(c), 's':s, 'x':x, 'pattern':pattern, 'colormap':colormap, 'outputname':outputname} for c, outputname in zip(cn, outputnames)]
         p = Pool(ncores)
         p.map(create_one_julias_set_to_expand, listOfInputs)
     else:
@@ -188,13 +183,13 @@ def get_epilog():
         python JuliaSet.py --help
 
         # Create a Julia set fractal with k=0.285+0.01j with 501 points and a square with half-length of 1.25
-        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j
+        python JuliaSet.py -s 501 -x 1.25 -k 0.285+0.01j
 
         # Create an animation with 50 frames that covers from 0.285+0.01j to 0.285+0.02j
-        python JuliaSet.py -i -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50 -o animation.mp4
+        python JuliaSet.py -s 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -n 50 -o animation.mp4
 
         # Same as previous but with fully developped argument and parallel execution
-        python JuliaSet.py --invert --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50 --parallel
+        python JuliaSet.py --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50 --parallel
 
         # Available colormaps are
         {0}
@@ -215,22 +210,21 @@ def main():
     pa('-s', '--size', type=int, help='size of the generated image.', default=401)
     pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2 x +2, -2 x +2 square will be created.')
     pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use', default='autumn')
-    pa('-i', '--invert', action='store_true', help='boolean used to invert colormap display.')
+    pa('--pattern', type=str, help='pattern', default='abcde')
     pa('-o', '--output', default=None, help='name of the generated file. If not provided, result will display on screen.')
     pa('-n', '--number', type=int, help='number of pictures to generate between two complex numbers. Default is 2.', default=2)
     pa('-p', '--parallel', action='store_true', help='boolean used to create images in a parallel way. It used the (n-1) cores. Default is False.')
     args = parser.parse_args()
     output = args.output
     if len(args.k) == 1:
-        create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, invert=args.invert)
+        create_one_julias_set(c=args.k[0], colormap=args.colormap, outputname=output, s=args.size, x=args.x, pattern=args.pattern)
     else:
         create_several_julias_set(n=args.number, cn=args.k, colormap=args.colormap,
-              s=args.size, x=args.x, invert=args.invert, parallel=args.parallel)
+              s=args.size, x=args.x, pattern=args.pattern, parallel=args.parallel)
         if args.output is None:
             args.output = 'juliaset.mp4'
         outputnames = get_filenames(cn=np.linspace(args.k[0], args.k[1], args.number),
-                                    colormap=args.colormap,
-                                    suffix='_level_mix' if args.invert else '')
+                                    colormap=args.colormap)
         if args.output.lower().endswith('gif'):
             create_animated_gif(filename=args.output, pngs=outputnames, continuous=True)
         elif args.output.lower().endswith('mp4'):
