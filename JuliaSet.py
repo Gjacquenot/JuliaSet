@@ -191,6 +191,13 @@ def get_epilog():
         # Same as previous but with fully developped argument and parallel execution
         python JuliaSet.py --size 501 -x 1.25 -k 0.285+0.01j 0.285+0.02j -number 50 --parallel
 
+        # Pattern describes the output displayed. Possible letter are:
+        a : Real part of Z
+        b : Norm of Z
+        c : Imaginary part of Z
+        d : Convergence level
+        e : Ponderation between norm and convergence level
+
         # Available colormaps are
         {0}
         """.format(', '.join(list_of_colormaps()))
@@ -206,11 +213,11 @@ def main():
                                      epilog=get_epilog(),
                                      formatter_class=CustomFormatter)
     pa = parser.add_argument
-    pa('-k', type=complex, default=[complex(0.285, 0.01)], nargs='*', help='complex number used to create Julia set.  Two numbers have to be given for animation.')
+    pa('-k', type=complex, default=[complex(0.285, 0.01)], nargs='*', help='complex number used to create Julia set. Two numbers have to be given for animation. Default is 0.285+0.01j.')
     pa('-s', '--size', type=int, help='size of the generated image.', default=401)
     pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2 x +2, -2 x +2 square will be created.')
-    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use', default='autumn')
-    pa('--pattern', type=str, help='pattern', default='abcde')
+    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use.', default='autumn')
+    pa('--pattern', type=str, help='pattern use to control output. A letter corresponds to a picture, several letters can be given. Description is given below.', default='abcde')
     pa('-o', '--output', default=None, help='name of the generated file. If not provided, result will display on screen.')
     pa('-n', '--number', type=int, help='number of pictures to generate between two complex numbers. Default is 2.', default=2)
     pa('-p', '--parallel', action='store_true', help='boolean used to create images in a parallel way. It used the (n-1) cores. Default is False.')
