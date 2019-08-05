@@ -67,19 +67,38 @@ def make_image(data, outputname='res.png', **kwargs):
     ymax = kwargs.get('ymax', 1.0)
     dpi = kwargs.get('dpi', 40)
     colormap = kwargs.get('colormap', 'hot')
-    fig = plt.figure()
-    fig.set_size_inches(1 * (xmax - xmin), 1 * (ymax - ymin))
-    ax = plt.Axes(fig, [0, 0, 1, 1])
-    ax.set_axis_off()
-    fig.add_axes(ax)
-    plt.set_cmap(colormap)
-    ax.contourf(data, aspect='normal')
-    # ax.contourf(data)
-    if outputname:
-        plt.savefig(outputname, dpi=dpi)
-        plt.close()
+    if colormap == 'all':
+        for c in list_of_colormaps():
+            fig = plt.figure()
+            fig.set_size_inches(1 * (xmax - xmin), 1 * (ymax - ymin))
+            ax = plt.Axes(fig, [0, 0, 1, 1])
+            ax.set_axis_off()
+            fig.add_axes(ax)
+            plt.set_cmap(c)
+            ax.contourf(data, aspect='normal')
+            # ax.contourf(data)
+            if outputname:
+                name = os.path.splitext(outputname)[0] + '_' + c
+                ext = os.path.splitext(outputname)[1]
+                plt.savefig(name + ext, dpi=dpi)
+                plt.close()
+            else:
+                plt.savefig(c + '.png', dpi=dpi)
+                plt.close()
     else:
-        plt.show()
+        fig = plt.figure()
+        fig.set_size_inches(1 * (xmax - xmin), 1 * (ymax - ymin))
+        ax = plt.Axes(fig, [0, 0, 1, 1])
+        ax.set_axis_off()
+        fig.add_axes(ax)
+        plt.set_cmap(colormap)
+        ax.contourf(data, aspect='normal')
+        # ax.contourf(data)
+        if outputname:
+            plt.savefig(outputname, dpi=dpi)
+            plt.close()
+        else:
+            plt.show()
 
 
 def get_filename(colormap, c, suffix=''):
@@ -216,7 +235,7 @@ def main():
     pa('-k', type=complex, default=[complex(0.285, 0.01)], nargs='*', help='complex number used to create Julia set. Two numbers have to be given for animation. Default is 0.285+0.01j.')
     pa('-s', '--size', type=int, help='size of the generated image.', default=401)
     pa('-x', type=float, default=2.0, help='domain size of the fractal. Default is 2.0, meaning a -2 x +2, -2 x +2 square will be created.')
-    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use.', default='autumn')
+    pa('-c', '--colormap', type=str, help='name of the matplotlib colormap to use. Using "all" creates images for all colormaps', default='autumn')
     pa('--pattern', type=str, help='pattern use to control output. A letter corresponds to a picture, several letters can be given. Description is given below.', default='abcde')
     pa('-o', '--output', default=None, help='name of the generated file. If not provided, result will display on screen.')
     pa('-n', '--number', type=int, help='number of pictures to generate between two complex numbers. Default is 2.', default=2)
