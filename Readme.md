@@ -1,8 +1,12 @@
 # Julia set
 
-Command line interface
+This repository contains a single Python script to create
+nice images or animations of Julia sets.
 
-    python JuliaSet.py -h
+This script has a command line interface: get started with the
+following command:
+
+    python JuliaSet.py --help
     usage: JuliaSet.py [-h] [-k [K [K ...]]] [-s SIZE] [-x X] [-c COLORMAP]
                     [--pattern PATTERN] [-o OUTPUT] [-n NUMBER] [-p]
 
@@ -53,11 +57,15 @@ Command line interface
     e : Ponderation between norm and convergence level
 
     # Available colormaps are
-    Accent, Blues, BrBG, BuGn, BuPu, CMRmap, Dark2, GnBu, Greens, Greys, OrRd, Oranges, PRGn, Paired, Pastel1, Pastel2, PiYG, PuBu, PuBuGn, PuOr, PuRd, Purples, RdBu, RdGy, RdPu, RdYlBu, RdYlGn, Reds, Set1, Set2, Set3, Spectral, YlGn, YlGnBu, YlOrBr, YlOrRd, afmhot, autumn, binary, bone, brg, bwr, cool, coolwarm, copper, cubehelix, flag, gist_earth, gist_gray, gist_heat, gist_ncar, gist_rainbow, gist_stern, gist_yarg, gnuplot, gnuplot2, gray, hot, hsv, jet, nipy_spectral, ocean, pink, prism, rainbow, seismic, spectral, spring, summer, terrain, winter
+    Accent, Blues, BrBG, BuGn, BuPu, CMRmap, Dark2, GnBu, Greens, Greys, OrRd, Oranges,
+    PRGn, Paired, Pastel1, Pastel2, PiYG, PuBu, PuBuGn, PuOr, PuRd, Purples, RdBu, RdGy,
+    RdPu, RdYlBu, RdYlGn, Reds, Set1, Set2, Set3, Spectral, YlGn, YlGnBu, YlOrBr, YlOrRd,
+    afmhot, autumn, binary, bone, brg, bwr, cool, coolwarm, copper, cubehelix, flag,
+    gist_earth, gist_gray, gist_heat, gist_ncar, gist_rainbow, gist_stern, gist_yarg,
+    gnuplot, gnuplot2, gray, hot, hsv, jet, nipy_spectral, ocean, pink, prism, rainbow,
+    seismic, spectral, spring, summer, terrain, winter
 
 
 ![](images/seismic/im_01001_1250_028500_001000_e.png)
 
 ![](https://upload.wikimedia.org/wikipedia/commons/3/3f/JuliaSetOrange.gif)
-
-
